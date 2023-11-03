@@ -1,0 +1,65 @@
+name: Python CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x  # Ganti dengan versi Python yang Anda gunakan
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt  # Sesuaikan dengan nama file dependensi Anda
+
+      - name: Linting
+        run: |
+          # Gunakan alat linting seperti pylint atau flake8
+          pylint your_module.py
+          flake8 your_module.py
+
+      - name: Run Tests
+        run: |
+          python -m unittest discover  # Atur sesuai dengan cara Anda menjalankan pengujian
+
+      - name: Publish Artifacts
+        if: success()
+        run: |
+          echo "Pengujian berhasil. Proses penerbitan di sini."  # Gantilah dengan perintah penerbitan Anda
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Production
+        if: needs.build.result == 'success'
+        run: |
+          # Tambahkan perintah untuk mengirim kode ke server produksi
+          # Misalnya, menggunakan SSH atau API deployment
+          ssh user@production-server "git pull origin main"
+      
+      - name: Send HTTP Request
+        if: needs.build.result == 'success'
+        run: |
+          # Gunakan perpustakaan Python, misalnya requests, untuk mengirim permintaan HTTP
+          python -c "import requests; requests.get('https://contoh.com/endpoint')"
+      
+      - name: Create Pull Request
+        if: needs.build.result == 'success'
+        run: |
+          # Gunakan perpustakaan PyGithub untuk membuat pull request
+          python -c "from github import Github
+g = Github('access_token')
+repo = g.get_repo('nama_repo')
+base = repo.get_branch('main')
+head = repo.create_git_ref(ref='refs/heads/fitur-baru', sha='commit_sha')
+pull = repo.create_pull(title='Fitur Baru', body='Deskripsi fitur', base=base, head=head)"
